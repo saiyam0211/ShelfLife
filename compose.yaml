@@ -1,0 +1,40 @@
+# One-node MongoDB replica set. Transactions need a replica set.
+services:
+  mongo:
+    image: mongo:8
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # Safe to repeat: the command starts the replica set only when no configuration exists.
+  # The member address is localhost:27017 because the host-side backend must resolve it.
+  mongo-init:
+    image: mongo:8
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - mongosh
+      - --host
+      - mongo:27017
+      - --quiet
+      - --eval
+      - |
+        try {
+          rs.status();
+          print('Replica set rs0 already exists.');
+        } catch (error) {
+          rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] });
+          print('Replica set rs0 started.');
+        }
+
+volumes:
+  mongo-data:
