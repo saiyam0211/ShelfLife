@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import { useResource } from "../hooks";
 import { ApiError, errorMessage } from "../api";
@@ -8,6 +9,7 @@ import { Icon } from "../components/Icon";
 import { Feedback } from "../components/Feedback";
 import { Toast } from "../components/Toast";
 import type { Notice } from "../components/Toast";
+import { CountUp, block, row } from "../motion";
 
 export function HistoryPage() {
   const { id = "" } = useParams();
@@ -61,7 +63,7 @@ export function HistoryPage() {
       <Link to="/members" className="back-link">
         ← All members
       </Link>
-      <header className="page-heading history-heading">
+      <motion.header className="page-heading history-heading" variants={block}>
         <div>
           <span className="eyebrow">Member / Reading history</span>
           <h1>
@@ -82,26 +84,31 @@ export function HistoryPage() {
             Issue a book
           </Link>
         )}
-      </header>
+      </motion.header>
       <Feedback
-        loading={history.loading}
+        loading={history.loading && !history.data}
         error={history.error}
         retry={history.reload}
       >
-        <div className="ledger-summary">
+        <motion.div
+          className="ledger-summary"
+          variants={block}
+          initial="hidden"
+          animate="show"
+        >
           <div>
-            <strong>{records.length}</strong>
+            <CountUp value={records.length} />
             <span>Lifetime loans</span>
           </div>
           <div>
-            <strong>{open}</strong>
+            <CountUp value={open} />
             <span>Currently reading</span>
           </div>
           <div className={overdue ? "overdue-text" : ""}>
-            <strong>{overdue}</strong>
+            <CountUp value={overdue} />
             <span>Overdue</span>
           </div>
-        </div>
+        </motion.div>
         <section className="collection">
           <div className="collection-caption">
             <span>The circulation ledger</span>
@@ -113,18 +120,32 @@ export function HistoryPage() {
             </Feedback>
           ) : (
             <div className="history-list">
-              {records.map((record) => {
+              {records.map((record, index) => {
                 const status = loanStatus(record, now);
                 return (
-                  <article className={`loan-row ${status}`} key={record._id}>
+                  <motion.article
+                    className={`loan-row ${status}`}
+                    key={record._id}
+                    variants={row}
+                    custom={index}
+                    initial="hidden"
+                    animate="show"
+                  >
                     <div className="loan-title">
-                      <span className={`badge ${status}`}>
+                      {/* The key restarts the motion when the status changes. */}
+                      <motion.span
+                        key={status}
+                        className={`badge ${status}`}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                      >
                         {status === "overdue"
                           ? "Overdue"
                           : status === "returned"
                             ? "Returned"
                             : "On loan"}
-                      </span>
+                      </motion.span>
                       <h2>{record.bookDetails.title}</h2>
                       <p>{record.bookDetails.author}</p>
                       <span className="isbn">
@@ -169,7 +190,7 @@ export function HistoryPage() {
                         </button>
                       )}
                     </div>
-                  </article>
+                  </motion.article>
                 );
               })}
             </div>

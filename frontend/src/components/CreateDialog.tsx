@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { motion, useIsPresent } from "framer-motion";
+import { ease, message } from "../motion";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError, errorMessage } from "../api";
 import { Icon } from "./Icon";
@@ -15,10 +17,14 @@ export function CreateDialog({
 }) {
   const { api } = useAuth();
   const dialog = useRef<HTMLDialogElement>(null);
+  // False while the exit motion runs. The class fades the backdrop out.
+  const isPresent = useIsPresent();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
-  useEffect(() => {
+  // A layout effect closes the dialog before React removes it from the page,
+  // so the browser can return focus to the button that opened it.
+  useLayoutEffect(() => {
     const element = dialog.current!;
     element.showModal();
     return () => element.close();
@@ -118,13 +124,18 @@ export function CreateDialog({
     }
   }
   return (
-    <dialog
+    <motion.dialog
       ref={dialog}
-      className="create-dialog"
+      className={`create-dialog${isPresent ? "" : " closing"}`}
+      initial={{ opacity: 0, y: 22, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 12, scale: 0.98, transition: { duration: 0.18 } }}
+      transition={{ duration: 0.32, ease }}
       aria-labelledby="dialog-title"
       onCancel={(event) => {
-        if (pending) event.preventDefault();
-        else onClose();
+        // Keep the dialog open for its exit motion. The effect cleanup closes it.
+        event.preventDefault();
+        if (!pending) onClose();
       }}
       onClick={(event) => {
         if (event.target === dialog.current && !pending) onClose();
@@ -156,8 +167,14 @@ export function CreateDialog({
       </p>
       <form onSubmit={submit}>
         <fieldset disabled={pending}>
-          {controls.map((control) => (
-            <div className="field" key={control.name}>
+          {controls.map((control, index) => (
+            <motion.div
+              className="field"
+              key={control.name}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease, delay: 0.08 + index * 0.04 }}
+            >
               <label htmlFor={`create-${control.name}`}>{control.label}</label>
               <input
                 id={`create-${control.name}`}
@@ -180,12 +197,12 @@ export function CreateDialog({
                   {fields[control.name]}
                 </small>
               )}
-            </div>
+            </motion.div>
           ))}
           {error && (
-            <p className="form-error" role="alert">
+            <motion.p className="form-error" role="alert" {...message}>
               {error}
-            </p>
+            </motion.p>
           )}
           <div className="dialog-actions">
             <button
@@ -206,6 +223,6 @@ export function CreateDialog({
           </div>
         </fieldset>
       </form>
-    </dialog>
+    </motion.dialog>
   );
 }

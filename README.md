@@ -133,9 +133,22 @@ These checks used the real API on Atlas and the frontend at `http://127.0.0.1:51
 | Unknown path | Open `/no-such-page` | Page-not-found screen with a link to `/books` |
 | Logout | Press `Sign out` | Token removed; redirect to `/login` |
 | Accessibility | Tab through the login form | Visible 2 px focus outline; every input and select has a label |
+| Animations | Open each page, a dialog, a toast, and the lending slip | Every animation ends in the correct state; no console errors |
+| Dialog focus | Open the add-book dialog, then press Escape | Dialog closes; focus returns to the `Add book` button |
+| Narrow screen | 375 px width, book list | Bottom navigation shows the active marker; no horizontal scroll |
 
 These items have unit-test or code evidence only, not a browser check:
 network failure with the retry control, an expired token during a session, and a screen reader.
+Animation speed and smoothness have no measurement: the test browser pane limited the frame rate.
+
+### Frontend animation
+
+Framer Motion is one added frontend dependency. The exam does not require it.
+`frontend/src/motion.tsx` holds the shared animation rules and the `CountUp` number component.
+Animations cover page entry, list rows, the navigation marker, toasts, dialogs, and the lending slip.
+`MotionConfig` in `frontend/src/main.tsx` stops movement when the system asks for reduced motion.
+Framer Motion changes presentation only. It does not hold application state.
+The first request of a list shows placeholder rows. Later requests keep the previous rows on screen.
 
 ## API list
 

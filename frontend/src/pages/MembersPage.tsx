@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import { useResource } from "../hooks";
 import { formatDate } from "../logic";
@@ -8,6 +9,9 @@ import { Feedback } from "../components/Feedback";
 import { CreateDialog } from "../components/CreateDialog";
 import { Toast } from "../components/Toast";
 import type { Notice } from "../components/Toast";
+import { block, row } from "../motion";
+
+const MotionLink = motion.create(Link);
 
 export function MembersPage() {
   const { api } = useAuth();
@@ -22,7 +26,7 @@ export function MembersPage() {
   );
   return (
     <>
-      <header className="page-heading">
+      <motion.header className="page-heading" variants={block}>
         <div>
           <span className="eyebrow">03 / The community</span>
           <h1>
@@ -34,8 +38,8 @@ export function MembersPage() {
           <Icon name="plus" size={18} />
           Register member
         </button>
-      </header>
-      <div className="catalog-tools">
+      </motion.header>
+      <motion.div className="catalog-tools" variants={block}>
         <div className="search-field">
           <Icon name="search" />
           <label className="sr-only" htmlFor="member-search">
@@ -50,8 +54,8 @@ export function MembersPage() {
           />
         </div>
         <span className="directory-label eyebrow">Member directory</span>
-      </div>
-      <section className="collection">
+      </motion.div>
+      <motion.section className="collection" variants={block}>
         <div className="collection-caption">
           <span>
             {members.loading
@@ -61,7 +65,7 @@ export function MembersPage() {
           <span>NAME / A–Z</span>
         </div>
         <Feedback
-          loading={members.loading}
+          loading={members.loading && !members.data}
           error={members.error}
           retry={members.reload}
           empty={
@@ -80,11 +84,15 @@ export function MembersPage() {
             </p>
           ) : (
             <div className="member-list">
-              {filtered?.map((member) => (
-                <Link
+              {filtered?.map((member, index) => (
+                <MotionLink
                   key={member._id}
                   className="member-row"
                   to={`/members/${member._id}/history`}
+                  variants={row}
+                  custom={index}
+                  initial="hidden"
+                  animate="show"
                 >
                   <span className="member-monogram" aria-hidden="true">
                     {member.name
@@ -104,25 +112,27 @@ export function MembersPage() {
                   <span className="member-history-link">
                     View history <Icon name="arrow" size={19} />
                   </span>
-                </Link>
+                </MotionLink>
               ))}
             </div>
           )}
         </Feedback>
-      </section>
-      {create && (
-        <CreateDialog
-          kind="member"
-          onClose={() => setCreate(false)}
-          onCreated={() => {
-            members.reload();
-            setNotice({
-              type: "success",
-              message: "Member registered. A new reading journey begins.",
-            });
-          }}
-        />
-      )}
+      </motion.section>
+      <AnimatePresence>
+        {create && (
+          <CreateDialog
+            kind="member"
+            onClose={() => setCreate(false)}
+            onCreated={() => {
+              members.reload();
+              setNotice({
+                type: "success",
+                message: "Member registered. A new reading journey begins.",
+              });
+            }}
+          />
+        )}
+      </AnimatePresence>
       <Toast notice={notice} onClose={() => setNotice(null)} />
     </>
   );

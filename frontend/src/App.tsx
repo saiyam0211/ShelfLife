@@ -8,7 +8,9 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "./auth/AuthContext";
+import { block, page } from "./motion";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Icon } from "./components/Icon";
 import { BooksPage } from "./pages/BooksPage";
@@ -16,6 +18,39 @@ import { IssuePage } from "./pages/IssuePage";
 import { MembersPage } from "./pages/MembersPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { LoginPage } from "./pages/LoginPage";
+
+// One navigation link. The green pill is one shared element:
+// it slides from the previous active link to the new one.
+function NavItem({
+  to,
+  icon,
+  label,
+  number,
+}: {
+  to: string;
+  icon: "books" | "issue" | "members";
+  label: string;
+  number: string;
+}) {
+  return (
+    <NavLink to={to}>
+      {({ isActive }) => (
+        <>
+          {isActive && (
+            <motion.span
+              layoutId="nav-pill"
+              className="nav-pill"
+              transition={{ type: "spring", stiffness: 460, damping: 38 }}
+            />
+          )}
+          <Icon name={icon} />
+          <span>{label}</span>
+          <span className="nav-number">{number}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
 
 function Shell() {
   const { logout } = useAuth();
@@ -49,21 +84,9 @@ function Shell() {
         </Link>
         <div className="sidebar-section eyebrow">Your workspace</div>
         <nav className="navigation" aria-label="Main navigation">
-          <NavLink to="/books">
-            <Icon name="books" />
-            <span>Catalog</span>
-            <span className="nav-number">01</span>
-          </NavLink>
-          <NavLink to="/issue">
-            <Icon name="issue" />
-            <span>Issue book</span>
-            <span className="nav-number">02</span>
-          </NavLink>
-          <NavLink to="/members">
-            <Icon name="members" />
-            <span>Members</span>
-            <span className="nav-number">03</span>
-          </NavLink>
+          <NavItem to="/books" icon="books" label="Catalog" number="01" />
+          <NavItem to="/issue" icon="issue" label="Issue book" number="02" />
+          <NavItem to="/members" icon="members" label="Members" number="03" />
         </nav>
         <div className="sidebar-foot">
           <div className="desk-label">
@@ -101,9 +124,17 @@ function Shell() {
             <Icon name="logout" />
           </button>
         </header>
-        <main id="main" ref={main} tabIndex={-1} key={location.pathname}>
+        <motion.main
+          id="main"
+          ref={main}
+          tabIndex={-1}
+          key={location.pathname}
+          variants={page}
+          initial="hidden"
+          animate="show"
+        >
           <Outlet />
-        </main>
+        </motion.main>
         <footer className="page-footer">
           <span>ShelfLife</span>
           <span>Good books. In good hands.</span>
@@ -128,14 +159,19 @@ export default function App() {
       <Route
         path="*"
         element={
-          <div className="not-found">
+          <motion.div
+            className="not-found"
+            variants={block}
+            initial="hidden"
+            animate="show"
+          >
             <span className="eyebrow">ShelfLife / 404</span>
             <h1>Out of circulation.</h1>
             <p>This page isn’t in our collection.</p>
             <Link className="button" to="/books">
               Back to catalog <Icon name="arrow" />
             </Link>
-          </div>
+          </motion.div>
         }
       />
     </Routes>

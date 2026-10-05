@@ -233,9 +233,18 @@ main:focus {
     transform 180ms var(--ease);
 }
 .navigation a.active {
-  background: var(--green);
   color: #f7f8ef;
+}
+/* The active background is one element that slides between links. */
+.nav-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--green);
   box-shadow: 0 3px 6px #243c2510;
+}
+.navigation a > :not(.nav-pill) {
+  position: relative;
 }
 .nav-number {
   margin-left: auto;
@@ -311,7 +320,6 @@ main {
   padding: 46px 45px 40px;
   flex: 1;
   min-width: 0;
-  animation: page-enter 240ms var(--ease);
 }
 .page-heading {
   display: flex;
@@ -515,6 +523,66 @@ main {
   margin: 6px 0 0 13px;
   font-size: 9px;
   color: #929785;
+}
+.copy-meter {
+  display: block;
+  width: 78px;
+  height: 3px;
+  margin: 10px 0 0 13px;
+  border-radius: 2px;
+  background: #e3e7d9;
+  overflow: hidden;
+}
+.copy-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #6f9575;
+  transform-origin: left center;
+}
+.book-table-wrap {
+  transition: opacity 200ms ease;
+}
+.book-table-wrap.is-refreshing {
+  opacity: 0.55;
+}
+.page-number {
+  display: inline-block;
+}
+.skeleton-list {
+  min-height: 280px;
+}
+.skeleton-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px;
+  grid-template-rows: auto auto;
+  gap: 12px 24px;
+  align-items: center;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.skeleton-row:last-child {
+  border-bottom: 0;
+}
+.skeleton-line,
+.skeleton-chip {
+  display: block;
+  height: 10px;
+  border-radius: 3px;
+  background: #e4e7da;
+}
+.skeleton-line {
+  width: min(190px, 45%);
+}
+.skeleton-line.title {
+  width: min(330px, 75%);
+  height: 18px;
+}
+.skeleton-chip {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  height: 24px;
 }
 .row-action {
   display: flex;
@@ -833,10 +901,8 @@ fieldset {
   border: 1px solid #d8dbcd;
   padding: 25px 28px 20px;
   box-shadow: 4px 5px 0 #e6e8dc;
-  transform: rotate(1deg);
-  transition:
-    transform 260ms var(--ease),
-    background 200ms ease;
+  /* Framer Motion owns the angle of the slip. */
+  transition: background 200ms ease;
 }
 .slip-top {
   display: flex;
@@ -874,7 +940,6 @@ fieldset {
 }
 .slip-book {
   min-height: 143px;
-  animation: page-enter 220ms var(--ease);
 }
 .slip-book h3 {
   font-family: var(--serif);
@@ -930,7 +995,6 @@ fieldset {
   color: #8c9a7c;
 }
 .slip-confirmed {
-  transform: rotate(0deg);
   background: #edf1e4;
 }
 .slip-confirmed .slip-title h2 {
@@ -945,7 +1009,6 @@ fieldset {
   padding: 4px 8px;
   font-size: 9px;
   transform: rotate(-4deg);
-  animation: stamp 260ms var(--ease);
 }
 .slip-bottom a {
   display: flex;
@@ -1104,13 +1167,10 @@ fieldset {
   border-radius: 9px;
   box-shadow: 0 30px 100px #1b2e2940;
   color: var(--ink);
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  transition:
-    opacity 230ms var(--ease),
-    transform 230ms var(--ease),
-    overlay 230ms allow-discrete,
-    display 230ms allow-discrete;
+}
+/* Framer Motion moves the dialog. CSS fades the backdrop with it. */
+.create-dialog.closing::backdrop {
+  opacity: 0;
 }
 .create-dialog::backdrop {
   background: #1d312952;
@@ -1168,11 +1228,6 @@ fieldset {
   font-size: 11px;
   line-height: 1.5;
   color: #455e38;
-  transform: translateY(0);
-  opacity: 1;
-  transition:
-    opacity 230ms ease,
-    transform 230ms var(--ease);
 }
 .toast-mark {
   display: flex;
@@ -1327,36 +1382,17 @@ fieldset {
   margin-bottom: 30px;
 }
 @starting-style {
-  .create-dialog[open] {
-    opacity: 0;
-    transform: translateY(12px) scale(0.97);
-  }
   .create-dialog[open]::backdrop {
     opacity: 0;
   }
-  .toast {
-    opacity: 0;
-    transform: translateY(15px);
-  }
 }
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(7px);
-  }
-  to {
+@keyframes skeleton-pulse {
+  0%,
+  100% {
     opacity: 1;
-    transform: translateY(0);
   }
-}
-@keyframes stamp {
-  from {
-    opacity: 0;
-    transform: rotate(-7deg) scale(1.15);
-  }
-  to {
-    opacity: 1;
-    transform: rotate(-4deg) scale(1);
+  50% {
+    opacity: 0.45;
   }
 }
 @keyframes spin {
@@ -1388,9 +1424,6 @@ fieldset {
   }
   .logout:hover {
     color: var(--green);
-  }
-  .lending-slip:hover {
-    transform: rotate(0deg);
   }
 }
 @media (min-width: 1500px) {
@@ -1563,8 +1596,10 @@ fieldset {
     width: 18px;
   }
   .navigation a.active {
-    background: #dce7c6;
     color: #344e27;
+  }
+  .nav-pill {
+    background: #dce7c6;
     box-shadow: 0 2px 5px #182c201a;
   }
   .navigation a:active {
@@ -1927,7 +1962,6 @@ fieldset {
     justify-self: center;
     padding: 25px 27px 20px;
     margin-bottom: 10px;
-    transform: rotate(0.6deg);
   }
   .slip-title h2 {
     font-size: 41px;
@@ -2162,9 +2196,6 @@ fieldset {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
-  }
-  .lending-slip {
-    transform: none;
   }
   .button:active:not(:disabled),
   .icon-button:active,

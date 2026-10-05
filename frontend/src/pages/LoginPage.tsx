@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { motion, useAnimationControls } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError, errorMessage } from "../api";
 import { safeReturnPath } from "../logic";
 import { Icon } from "../components/Icon";
+import { block, ease, message, page } from "../motion";
 
 export function LoginPage() {
   const { token, api, login } = useAuth();
@@ -12,6 +14,7 @@ export function LoginPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
+  const shake = useAnimationControls();
   // The application shell sets the title on protected pages only.
   useEffect(() => {
     document.title = "Sign in · ShelfLife";
@@ -34,22 +37,32 @@ export function LoginPage() {
     } catch (cause) {
       setError(errorMessage(cause));
       if (cause instanceof ApiError) setFields(cause.fields);
+      // A short sideways shake marks the refused sign-in.
+      void shake.start({
+        x: [0, -8, 8, -5, 5, 0],
+        transition: { duration: 0.4 },
+      });
     } finally {
       setPending(false);
     }
   }
   return (
     <div className="login-page">
-      <section className="login-story">
-        <div className="brand light">
+      <motion.section
+        className="login-story"
+        variants={page}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div className="brand light" variants={block}>
           <span className="brand-mark">
             <Icon name="books" size={29} />
           </span>
           <span>
             ShelfLife<span className="brand-sub">THE COLLEGE LIBRARY</span>
           </span>
-        </div>
-        <div className="login-statement">
+        </motion.div>
+        <motion.div className="login-statement" variants={block}>
           <span className="eyebrow">Your everyday library desk</span>
           <h1>
             Good books.
@@ -61,15 +74,20 @@ export function LoginPage() {
             <br />
             and the stories moving.
           </p>
-        </div>
-        <div className="login-colophon">
+        </motion.div>
+        <motion.div className="login-colophon" variants={block}>
           <span>CATALOG</span>
           <span>CIRCULATION</span>
           <span>COMMUNITY</span>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
       <section className="login-form-side">
-        <div className="login-form-wrap">
+        <motion.div
+          className="login-form-wrap"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease, delay: 0.18 }}
+        >
           <span className="eyebrow">Librarian access</span>
           <h2>
             Welcome to
@@ -77,7 +95,7 @@ export function LoginPage() {
             your library.
           </h2>
           <p className="muted">Sign in to pick up where you left off.</p>
-          <form onSubmit={submit}>
+          <motion.form onSubmit={submit} animate={shake}>
             <fieldset disabled={pending}>
               <div className="field">
                 <label htmlFor="email">Email address</label>
@@ -120,20 +138,20 @@ export function LoginPage() {
                 )}
               </div>
               {error && (
-                <p role="alert" className="form-error">
+                <motion.p role="alert" className="form-error" {...message}>
                   {error}
-                </p>
+                </motion.p>
               )}
               <button className="button login-submit" disabled={pending}>
                 {pending ? "Signing in…" : "Enter the library"}
                 <Icon name="arrow" />
               </button>
             </fieldset>
-          </form>
+          </motion.form>
           <p className="login-note">
             A dedicated workspace for your college library.
           </p>
-        </div>
+        </motion.div>
         <div className="login-bottom">
           ShelfLife <span>Made for the way libraries work.</span>
         </div>

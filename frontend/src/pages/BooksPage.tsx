@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import { useResource } from "../hooks";
 import { Icon } from "../components/Icon";
@@ -7,6 +8,7 @@ import { Feedback } from "../components/Feedback";
 import { CreateDialog } from "../components/CreateDialog";
 import { Toast } from "../components/Toast";
 import type { Notice } from "../components/Toast";
+import { block, ease, row } from "../motion";
 
 export function BooksPage() {
   const { api } = useAuth();
@@ -21,9 +23,13 @@ export function BooksPage() {
   );
   const genres = useResource((signal) => api.genres(signal), [api]);
   const pagination = list.data?.pagination;
+  // Show placeholders for the first request only. Later requests keep the
+  // previous rows on screen, dimmed, so typing does not make the list blink.
+  const firstLoad = list.loading && !list.data;
+  const firstIndex = pagination ? (pagination.page - 1) * pagination.limit : 0;
   return (
     <>
-      <header className="page-heading">
+      <motion.header className="page-heading" variants={block}>
         <div>
           <span className="eyebrow">01 / The collection</span>
           <h1>
@@ -35,8 +41,8 @@ export function BooksPage() {
           <Icon name="plus" size={18} />
           Add book
         </button>
-      </header>
-      <div className="catalog-tools">
+      </motion.header>
+      <motion.div className="catalog-tools" variants={block}>
         <div className="search-field">
           <Icon name="search" />
           <label className="sr-only" htmlFor="book-search">
@@ -71,7 +77,7 @@ export function BooksPage() {
             ))}
           </select>
         </div>
-      </div>
+      </motion.div>
       {genres.error && (
         <div className="inline-error" role="alert">
           Genre filters are unavailable.{" "}
@@ -80,7 +86,12 @@ export function BooksPage() {
           </button>
         </div>
       )}
-      <section className="collection" aria-label="Book collection">
+      <motion.section
+        className="collection"
+        aria-label="Book collection"
+        aria-busy={list.loading}
+        variants={block}
+      >
         <div className="collection-caption">
           <span>
             {list.loading
@@ -90,7 +101,7 @@ export function BooksPage() {
           <span>ALPHABETICAL / A–Z</span>
         </div>
         <Feedback
-          loading={list.loading}
+          loading={firstLoad}
           error={list.error}
           retry={list.reload}
           empty={
@@ -108,8 +119,10 @@ export function BooksPage() {
                 : "Add your first book to open the shelves."}
             </p>
           )}
-          {!list.loading && !list.error && !!list.data?.data.length && (
-            <div className="book-table-wrap">
+          {!list.error && !!list.data?.data.length && (
+            <div
+              className={`book-table-wrap${list.loading ? " is-refreshing" : ""}`}
+            >
               <table className="book-table">
                 <thead>
                   <tr>
@@ -123,14 +136,17 @@ export function BooksPage() {
                 </thead>
                 <tbody>
                   {list.data.data.map((book, index) => (
-                    <tr key={book._id}>
+                    <motion.tr
+                      key={book._id}
+                      variants={row}
+                      custom={index}
+                      initial="hidden"
+                      animate="show"
+                    >
                       <td>
                         <div className="book-identity">
                           <span className="book-index" aria-hidden="true">
-                            {String((page - 1) * 10 + index + 1).padStart(
-                              2,
-                              "0",
-                            )}
+                            {String(firstIndex + index + 1).padStart(2, "0")}
                           </span>
                           <div>
                             <h2>{book.title}</h2>
@@ -156,6 +172,20 @@ export function BooksPage() {
                           of {book.totalCopies}{" "}
                           {book.totalCopies === 1 ? "copy" : "copies"}
                         </span>
+                        {/* Share of copies on the shelf. The text above carries the same fact. */}
+                        <span className="copy-meter" aria-hidden="true">
+                          <motion.span
+                            initial={{ scaleX: 0 }}
+                            animate={{
+                              scaleX: book.availableCopies / book.totalCopies,
+                            }}
+                            transition={{
+                              duration: 0.6,
+                              ease,
+                              delay: 0.15 + Math.min(index, 12) * 0.035,
+                            }}
+                          />
+                        </span>
                       </td>
                       <td className="book-action">
                         {book.availableCopies > 0 ? (
@@ -171,19 +201,20 @@ export function BooksPage() {
                           <span className="unavailable-label">Unavailable</span>
                         )}
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
         </Feedback>
-      </section>
-      {!list.loading && !list.error && !!pagination?.total && (
-        <div className="pagination">
+      </motion.section>
+      {!list.error && !!pagination?.total && (
+        <motion.div className="pagination" variants={block}>
           <span>
-            Showing {(page - 1) * 10 + 1}–
-            {Math.min(page * 10, pagination.total)} of {pagination.total} titles
+            Showing {firstIndex + 1}–
+            {Math.min(firstIndex + pagination.limit, pagination.total)} of{" "}
+            {pagination.total} titles
           </span>
           <div>
             <button
@@ -195,7 +226,16 @@ export function BooksPage() {
               ←
             </button>
             <span>
-              Page {page}{" "}
+              Page{" "}
+              <motion.span
+                key={pagination.page}
+                className="page-number"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease }}
+              >
+                {pagination.page}
+              </motion.span>{" "}
               <span className="muted">of {pagination.totalPages}</span>
             </span>
             <button
@@ -207,22 +247,24 @@ export function BooksPage() {
               →
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
-      {create && (
-        <CreateDialog
-          kind="book"
-          onClose={() => setCreate(false)}
-          onCreated={() => {
-            list.reload();
-            genres.reload();
-            setNotice({
-              type: "success",
-              message: "A new title joins the shelves. Book added.",
-            });
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {create && (
+          <CreateDialog
+            kind="book"
+            onClose={() => setCreate(false)}
+            onCreated={() => {
+              list.reload();
+              genres.reload();
+              setNotice({
+                type: "success",
+                message: "A new title joins the shelves. Book added.",
+              });
+            }}
+          />
+        )}
+      </AnimatePresence>
       <Toast notice={notice} onClose={() => setNotice(null)} />
     </>
   );

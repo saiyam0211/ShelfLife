@@ -1,3 +1,5 @@
+import { motion } from "framer-motion";
+import { block } from "../motion";
 import { Icon } from "./Icon";
 export function Feedback({
   loading,
@@ -12,32 +14,56 @@ export function Feedback({
   empty?: string;
   children?: React.ReactNode;
 }) {
+  // Placeholder rows keep the page shape while the first request runs.
   if (loading)
     return (
-      <div className="feedback" role="status">
-        <span className="loading-mark" />
-        <h3>Opening the shelf…</h3>
-        <p>Fetching the latest library records.</p>
+      <div className="skeleton-list" role="status">
+        <span className="sr-only">
+          Opening the shelf. Fetching the latest library records.
+        </span>
+        {[0, 1, 2, 3, 4].map((index) => (
+          <div
+            className="skeleton-row"
+            key={index}
+            style={{ animationDelay: `${index * 110}ms` }}
+            aria-hidden="true"
+          >
+            <span className="skeleton-line title" />
+            <span className="skeleton-line" />
+            <span className="skeleton-chip" />
+          </div>
+        ))}
       </div>
     );
   if (error)
     return (
-      <div className="feedback error-panel" role="alert">
+      <motion.div
+        className="feedback error-panel"
+        role="alert"
+        variants={block}
+        initial="hidden"
+        animate="show"
+      >
         <span className="eyebrow">A brief interruption</span>
         <h3>We couldn’t load this.</h3>
         <p>{error}</p>
         <button className="button secondary" onClick={retry}>
           Try again <Icon name="arrow" size={17} />
         </button>
-      </div>
+      </motion.div>
     );
   if (empty)
     return (
-      <div className="feedback">
+      <motion.div
+        className="feedback"
+        variants={block}
+        initial="hidden"
+        animate="show"
+      >
         <Icon name="books" size={30} />
         <h3>{empty}</h3>
         {children}
-      </div>
+      </motion.div>
     );
   return <>{children}</>;
 }

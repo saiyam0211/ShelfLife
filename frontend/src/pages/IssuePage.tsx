@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../auth/AuthContext";
 import { useResource } from "../hooks";
 import { ApiError, errorMessage } from "../api";
@@ -11,6 +12,7 @@ import { Icon } from "../components/Icon";
 import { Feedback } from "../components/Feedback";
 import { Toast } from "../components/Toast";
 import type { Notice } from "../components/Toast";
+import { block, ease } from "../motion";
 
 export function IssuePage() {
   const { api } = useAuth();
@@ -70,7 +72,7 @@ export function IssuePage() {
   }
   return (
     <>
-      <header className="page-heading">
+      <motion.header className="page-heading" variants={block}>
         <div>
           <span className="eyebrow">02 / Circulation</span>
           <h1>
@@ -79,14 +81,19 @@ export function IssuePage() {
           <p>A good book is better in someone’s hands.</p>
         </div>
         <span className="heading-note">THE LENDING DESK</span>
-      </header>
+      </motion.header>
       <Feedback
         loading={options.loading && !options.data}
         error={options.error}
         retry={options.reload}
       >
         <div className="issue-layout">
-          <section className="issue-form-panel">
+          <motion.section
+            className="issue-form-panel"
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.45, ease }}
+          >
             <div className="section-heading">
               <span className="section-number">01</span>
               <div>
@@ -157,10 +164,15 @@ export function IssuePage() {
               <Icon name="books" size={18} />
               <span>One book. A world of possibilities.</span>
             </div>
-          </section>
-          <aside
+          </motion.section>
+          {/* The slip lies at a small angle and straightens on hover or confirmation. */}
+          <motion.aside
             className={`lending-slip ${receipt ? "slip-confirmed" : ""}`}
             aria-label={receipt ? "Issue confirmation" : "Lending slip preview"}
+            initial={{ opacity: 0, x: 28, rotate: 4 }}
+            animate={{ opacity: 1, x: 0, rotate: receipt ? 0 : 1 }}
+            whileHover={{ rotate: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 24 }}
           >
             <div className="slip-top">
               <span>SHELFLIFE</span>
@@ -172,21 +184,29 @@ export function IssuePage() {
               </span>
               <h2>Lending slip</h2>
             </div>
-            <div
-              className="slip-book"
-              key={receipt?.book._id ?? book?._id ?? "empty"}
-            >
+            <div className="slip-book">
               <span className="slip-label">TITLE</span>
-              <h3>
-                {receipt?.book.title ??
-                  book?.title ??
-                  "A story waiting\nto be chosen."}
-              </h3>
-              <p>
-                {receipt?.book.author ??
-                  book?.author ??
-                  "Select a book to begin"}
-              </p>
+              {/* The previous title leaves before the next title enters. */}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={receipt?.book._id ?? book?._id ?? "empty"}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2, ease }}
+                >
+                  <h3>
+                    {receipt?.book.title ??
+                      book?.title ??
+                      "A story waiting\nto be chosen."}
+                  </h3>
+                  <p>
+                    {receipt?.book.author ??
+                      book?.author ??
+                      "Select a book to begin"}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
             </div>
             <dl>
               <div>
@@ -218,10 +238,16 @@ export function IssuePage() {
             <div className="slip-bottom">
               {receipt ? (
                 <>
-                  <span className="confirmed-stamp">
+                  {/* The stamp lands from above the slip and settles at its angle. */}
+                  <motion.span
+                    className="confirmed-stamp"
+                    initial={{ opacity: 0, scale: 2.4, rotate: -16 }}
+                    animate={{ opacity: 1, scale: 1, rotate: -4 }}
+                    transition={{ type: "spring", stiffness: 520, damping: 19, delay: 0.12 }}
+                  >
                     <Icon name="check" size={17} />
                     ISSUED
-                  </span>
+                  </motion.span>
                   <Link to={`/members/${receipt.member._id}/history`}>
                     View member history <Icon name="arrow" size={16} />
                   </Link>
@@ -236,7 +262,7 @@ export function IssuePage() {
             {receipt && (
               <p className="timezone-note">Dates shown in {dateZone}.</p>
             )}
-          </aside>
+          </motion.aside>
         </div>
       </Feedback>
       <Toast notice={notice} onClose={() => setNotice(null)} />
