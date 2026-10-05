@@ -2,7 +2,8 @@
 
 ## Assumptions
 
-The application has no implementation yet.
+The backend is implemented and verified.
+Read the README for the current frontend implementation status.
 Build a working application for one college library.
 Describe the university network in the separate system design answer.
 

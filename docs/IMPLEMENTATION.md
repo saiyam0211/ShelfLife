@@ -198,7 +198,7 @@ Close the server and database connection during shutdown.
 | `backend/.env` | `PORT=3000` | API port |
 | `backend/.env` | `MONGODB_URI` | Replica set connection with the database name `shelflife`; Atlas URI, or `mongodb://localhost:27017/shelflife?replicaSet=rs0` for Compose |
 | `backend/.env` | `JWT_SECRET` | Long, random signing secret; no default value |
-| `backend/.env` | `FRONTEND_ORIGIN=http://localhost:5173` | Allowed browser origin |
+| `backend/.env` | `FRONTEND_ORIGIN=http://localhost:5173,http://127.0.0.1:5173` | Allowed browser origins, separated by commas; `localhost` and `127.0.0.1` are different origins |
 | `backend/.env` | `SEED_LIBRARIAN_EMAIL` | Development librarian email |
 | `backend/.env` | `SEED_LIBRARIAN_PASSWORD` | Development librarian password |
 | `frontend/.env` | `VITE_API_BASE_URL=http://localhost:3000/api` | Public API URL; never a secret |

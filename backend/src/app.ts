@@ -13,7 +13,7 @@ app.disable('x-powered-by');
 
 // Order matters: logger first, routes next, unmatched routes, error handler last.
 app.use(requestLogger);
-app.use(cors({ origin: config.frontendOrigin }));
+app.use(cors({ origin: config.frontendOrigins }));
 app.use(express.json({ limit: '32kb' }));
 
 app.use('/api/auth', authRoutes);

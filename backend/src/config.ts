@@ -16,5 +16,9 @@ export const config = {
   port: Number(process.env.PORT ?? 3000),
   mongodbUri: required('MONGODB_URI'),
   jwtSecret,
-  frontendOrigin: required('FRONTEND_ORIGIN'),
+  // One or more allowed browser origins, separated by commas.
+  frontendOrigins: required('FRONTEND_ORIGIN')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 };
