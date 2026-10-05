@@ -2,9 +2,10 @@
 
 ## Assumptions
 
-This repository contains the exam specification, the build documentation, and the backend application.
-The backend in `backend/` is complete and verified. See "Verified backend status" below.
-The frontend in `frontend/` does not exist yet. Frontend sections describe the intended implementation.
+This repository contains the exam specification, the build documentation, and the complete application.
+The backend in `backend/` answers Q1. The frontend in `frontend/` answers Q2.
+The system design answer in `docs/SYSTEM_DESIGN.md` answers Q3.
+All three parts are complete and verified. See "Verified status" below.
 
 The assessment lasts **3 hours** and carries **50 marks**.
 Q1 carries 20 marks. Q2 carries 20 marks. Q3 carries 10 marks.
@@ -23,10 +24,9 @@ The original exam specification is the source of truth.
 The implementation guide defines assumptions where the exam does not specify behavior.
 Keep backend code, frontend code, and the system design answer in separate locations.
 
-## Planned setup
+## Setup
 
-These commands are the required setup contract for the completed application.
-The backend and database commands are verified. The frontend commands do not work until `frontend/` exists.
+These commands set up the completed application. All commands are verified.
 
 Install Node.js 22.18 or later, npm, and Docker with Compose support.
 Use a MongoDB replica set for transactions.
@@ -76,14 +76,17 @@ npm --prefix backend run dev
 npm --prefix frontend run dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://127.0.0.1:5173`. The frontend server listens on that address only.
 The backend listens on `http://localhost:3000`.
+The backend accepts browser requests from the origins in `FRONTEND_ORIGIN`.
+Log in with `SEED_LIBRARIAN_EMAIL` and `SEED_LIBRARIAN_PASSWORD` from `backend/.env`.
 The local MongoDB alternative listens on `localhost:27017`.
 
-Use these checks after implementation:
+Use these checks:
 
 ```sh
 npm --prefix backend test
+npm --prefix frontend test
 npm --prefix frontend run typecheck
 npm --prefix frontend run build
 ```
@@ -92,7 +95,7 @@ The seed command creates 13 books, 3 members, 3 borrow records, and one libraria
 The seed command is safe to repeat. It adds only missing records.
 It never overwrites existing loans and never resets copy counts.
 
-## Verified backend status
+## Verified status
 
 These results are from 2026-10-05 with the runtime versions above.
 
@@ -104,10 +107,35 @@ These results are from 2026-10-05 with the runtime versions above.
 | `npm --prefix backend test` | Pass on Atlas, 5 of 5 tests, 3 consecutive runs; pass on Docker, 8 consecutive runs |
 | All sample requests in the implementation guide, section 7 | Pass against the compiled server with Docker |
 | `npm --prefix backend run dev` | Pass on Atlas; login, book list, genre list, and member history answer |
+| `npm --prefix frontend run typecheck` and `npm --prefix frontend run build` | Pass; no TypeScript errors |
+| `npm --prefix frontend test` | Pass; 3 of 3 tests |
+| Fresh clone from GitHub, `npm ci` in both projects, then all builds and tests | Pass on Atlas |
+| Rendered length of the system design answer | 2 pages on A4 at 11 pt; see `docs/SYSTEM_DESIGN.pdf` |
 
-The test command uses the database `shelflife_test` on the configured MongoDB deployment.
+The backend test command uses the database `shelflife_test` on the configured MongoDB deployment.
 It refuses the application database name and deletes all data in the test database.
-Frontend checks, the final acceptance table UI rows, and a fresh-clone setup are not done.
+
+### Browser checks
+
+These checks used the real API on Atlas and the frontend at `http://127.0.0.1:5173`.
+
+| Area | Check | Result |
+|---|---|---|
+| Route protection | Open `/members` without a token | Redirect to `/login`; return to `/members` after login |
+| Login | Incorrect password, then correct password | Error alert and no token; then token in `sessionStorage` |
+| Book list | 13 books, page size 10 | Two pages; titles in alphabetical order; no repeated book |
+| Title search | Search from page 2 for a title; search for literal `.*` | Page resets to 1 and finds the title; `.*` shows the empty state |
+| Genre filter | Select `Technology` | Three matching books; all seven genres are options |
+| Issue form | Select a member and a book with one copy | All 13 books are options; button is disabled during the request; success toast with `role="status"` |
+| Stock after issue | Read the book options again | The book with zero copies is not an option |
+| Member history | Open a member with an open, a returned, and an overdue loan | `Overdue` text badge with a different color on the open past-due loan only |
+| Return | Press `Return book` | Success toast; status `Returned`; catalog shows the copy again |
+| Unknown path | Open `/no-such-page` | Page-not-found screen with a link to `/books` |
+| Logout | Press `Sign out` | Token removed; redirect to `/login` |
+| Accessibility | Tab through the login form | Visible 2 px focus outline; every input and select has a label |
+
+These items have unit-test or code evidence only, not a browser check:
+network failure with the retry control, an expired token during a session, and a screen reader.
 
 ## API list
 
@@ -141,8 +169,8 @@ The implementation guide defines request bodies, responses, errors, and sample r
 | React and TypeScript application | `frontend/` |
 | Components and pages | Separate folders inside `frontend/src/` |
 | State management note | `docs/IMPLEMENTATION.md`, section 6 |
-| Race condition note, 4–6 lines | `docs/IMPLEMENTATION.md`, section 5 |
-| System design answer, 1–2 pages | `docs/SYSTEM_DESIGN.md` |
+| Race condition note, 4–6 lines | `docs/IMPLEMENTATION.md`, section 5; also `backend/src/controllers/borrow.ts` |
+| System design answer, 1–2 pages | `docs/SYSTEM_DESIGN.md`; rendered copy in `docs/SYSTEM_DESIGN.pdf` |
 | Labeled diagrams | Mermaid blocks in both documentation files |
 
 Use consistent indentation and descriptive names.

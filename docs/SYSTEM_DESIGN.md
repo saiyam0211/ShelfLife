@@ -96,4 +96,5 @@ Rate-limit login and reject excess load with retry responses.
 Keep stock checks and transaction guarantees under load.
 
 Submission note: This file is the Q3 written answer.
-Render it with its diagram and verify the required one-to-two page length before submission.
+`SYSTEM_DESIGN.pdf` is the rendered copy with the diagram. It has 2 pages on A4 at 11 pt.
+Render the PDF again after each change to this file.

@@ -2,8 +2,8 @@
 
 ## Assumptions
 
-The backend is implemented and verified.
-Read the README for the current frontend implementation status.
+The backend and the frontend are implemented and verified.
+Read the README for the verified status and the remaining unverified cases.
 Build a working application for one college library.
 Describe the university network in the separate system design answer.
 

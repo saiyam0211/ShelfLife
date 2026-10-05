@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -12,6 +12,10 @@ export function LoginPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
+  // The application shell sets the title on protected pages only.
+  useEffect(() => {
+    document.title = "Sign in · ShelfLife";
+  }, []);
   if (token)
     return <Navigate to={safeReturnPath(location.state?.from)} replace />;
   async function submit(event: FormEvent<HTMLFormElement>) {

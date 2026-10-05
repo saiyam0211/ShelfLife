@@ -154,19 +154,30 @@ ShelfLife/
     ├── vite.config.ts
     ├── index.html
     ├── .env.example
-    └── src/
-        ├── main.tsx
-        ├── App.tsx
-        ├── api.ts
-        ├── types.ts
-        ├── styles.css
-        ├── auth/AuthContext.tsx
-        ├── components/{Select,Toast,ProtectedRoute}.tsx
-        └── pages/{LoginPage,BooksPage,IssuePage,HistoryPage,MembersPage}.tsx
+    ├── src/
+    │   ├── main.tsx
+    │   ├── App.tsx
+    │   ├── api.ts
+    │   ├── types.ts
+    │   ├── hooks.ts
+    │   ├── logic.ts
+    │   ├── styles.css
+    │   ├── auth/AuthContext.tsx
+    │   ├── components/{Select,Toast,ProtectedRoute,Feedback,CreateDialog,Icon}.tsx
+    │   └── pages/{LoginPage,BooksPage,IssuePage,HistoryPage,MembersPage}.tsx
+    └── test/client.test.ts
 ```
 
 Brace notation identifies separate files.
 It does not identify a literal filename.
+
+These frontend files are additions to the first plan.
+`hooks.ts` holds one data-loading hook with request cancellation.
+`logic.ts` holds the overdue rule, the date format, and the safe login return path.
+`Feedback.tsx` shows the loading, error, and empty states.
+`CreateDialog.tsx` holds the book and member creation forms.
+`Icon.tsx` holds the inline icons.
+`test/client.test.ts` checks the typed client, the overdue rule, and the return path.
 
 ```mermaid
 flowchart LR
@@ -825,5 +836,5 @@ The implemented test replaces `BorrowRecord.create` with a failing function for 
 
 The build agent must record actual check results in its completion report.
 The table defines required evidence; it does not claim that evidence exists now.
-The root README records the verified backend results.
-The UI, accessibility, frontend build, and fresh-setup rows have no evidence yet.
+The root README records the verified backend, frontend, browser, and fresh-setup results.
+The README also lists the three UI cases that have no browser check.
